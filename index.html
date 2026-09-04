@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Recipe Box">
+<meta name="theme-color" content="#F7F1E4">
+<title>Recipe Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F1E4;
+    --paper-raised: #FCF8EF;
+    --ink: #2B241C;
+    --ink-soft: #6B6152;
+    --rust: #B4432E;
+    --rust-dark: #963725;
+    --forest: #3F5B44;
+    --gold: #B8863C;
+    --berry: #7A4B5E;
+    --line: #DCCFAF;
+    --line-soft: #E9DFC6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  header.hero { margin-bottom: 28px; }
+
+  header.hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 2.2rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  header.hero p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    max-width: 46ch;
+  }
+
+  /* --- Home: tab cards --- */
+  .tabs { display: grid; gap: 14px; margin-top: 28px; }
+
+  .tab-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--tab-accent, var(--rust));
+    border-radius: 4px;
+    padding: 20px 22px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .tab-card:hover { transform: translateX(2px); box-shadow: 0 2px 10px rgba(43, 36, 28, 0.08); }
+  .tab-card:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+
+  .tab-card .tab-name { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600; }
+  .tab-card .tab-count { font-size: 0.85rem; color: var(--ink-soft); white-space: nowrap; }
+
+  /* --- Section view --- */
+  .section-view { display: none; }
+  .section-view.active { display: block; }
+
+  .back-btn {
+    background: none; border: none; color: var(--ink-soft);
+    font-family: 'Work Sans', sans-serif; font-size: 0.92rem;
+    cursor: pointer; padding: 6px 0; margin-bottom: 6px;
+  }
+  .back-btn:hover { color: var(--ink); }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem;
+    font-weight: 600;
+    margin: 4px 0 18px;
+    border-bottom: 2px solid var(--section-accent, var(--rust));
+    padding-bottom: 12px;
+  }
+
+  .controls-row { display: flex; gap: 10px; margin-bottom: 18px; position: relative; }
+  .search-wrap { flex: 1; position: relative; }
+
+  .search-wrap input {
+    width: 100%; padding: 11px 14px;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: var(--paper-raised);
+    font-family: 'Work Sans', sans-serif; font-size: 0.95rem; color: var(--ink);
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--section-accent, var(--rust)); }
+
+  .search-results {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(43, 36, 28, 0.12);
+    z-index: 5; max-height: 260px; overflow-y: auto; display: none;
+  }
+  .search-results.open { display: block; }
+  .search-results button {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    border-bottom: 1px solid var(--line-soft); padding: 10px 14px;
+    font-family: 'Work Sans', sans-serif; font-size: 0.92rem; color: var(--ink); cursor: pointer;
+  }
+  .search-results button:last-child { border-bottom: none; }
+  .search-results button:hover { background: var(--paper); }
+  .search-results .no-match { padding: 12px 14px; color: var(--ink-soft); font-size: 0.9rem; cursor: default; }
+
+  .add-btn {
+    background: var(--section-accent, var(--rust)); color: var(--paper); border: none;
+    border-radius: 4px; padding: 0 18px; font-family: 'Work Sans', sans-serif;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap;
+  }
+  .add-btn:hover { opacity: 0.92; }
+
+  /* --- Recipe list --- */
+  .recipe-list { display: flex; flex-direction: column; gap: 8px; }
+  .recipe-row {
+    background: var(--paper-raised); border: 1px solid var(--line-soft); border-radius: 4px;
+    padding: 13px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .recipe-row:hover { border-color: var(--line); }
+  .recipe-row .r-title { font-weight: 500; font-size: 0.98rem; }
+
+  .empty-state {
+    padding: 28px 10px; text-align: center; color: var(--ink-soft);
+    font-size: 0.92rem; border: 1px dashed var(--line); border-radius: 4px;
+  }
+
+  /* --- Recipe detail --- */
+  .recipe-detail { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 4px; padding: 22px; }
+  .recipe-detail h3 { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 18px; }
+  .recipe-detail h4 {
+    font-family: 'Work Sans', sans-serif; font-size: 0.78rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink-soft); margin: 18px 0 8px;
+  }
+  .recipe-detail h4:first-of-type { margin-top: 0; }
+  .recipe-detail .block-text { white-space: pre-wrap; font-size: 0.95rem; line-height: 1.55; margin: 0; }
+
+  .detail-actions { display: flex; justify-content: space-between; margin-top: 22px; gap: 10px; }
+  .link-btn { background: none; border: none; color: var(--ink-soft); font-size: 0.85rem; cursor: pointer; padding: 6px 0; }
+  .link-btn:hover { color: var(--ink); }
+  .link-btn.danger:hover { color: var(--rust-dark); }
+
+  /* --- Add recipe form --- */
+  .add-form { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 4px; padding: 22px; }
+  .field { margin-bottom: 20px; }
+
+  .field-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px; flex-wrap: wrap; gap: 6px;
+  }
+
+  .field-head label {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft);
+  }
+
+  .photo-toggle {
+    background: none; border: 1px solid var(--line); border-radius: 20px;
+    padding: 3px 12px; font-size: 0.76rem; color: var(--ink-soft); cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .photo-toggle:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .photo-toggle.active { background: var(--section-accent, var(--rust)); color: var(--paper); border-color: transparent; }
+
+  .field input[type="text"],
+  .field textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px;
+    background: var(--paper); font-family: 'Work Sans', sans-serif; font-size: 0.94rem; color: var(--ink); resize: vertical;
+  }
+  .field input[type="text"]:focus, .field textarea:focus { outline: none; border-color: var(--section-accent, var(--rust)); }
+  .field textarea { min-height: 90px; line-height: 1.5; }
+
+  .photo-zone { display: none; margin-top: 10px; }
+  .photo-zone.open { display: block; }
+
+  .photo-drop {
+    border: 1.5px dashed var(--line); border-radius: 4px; padding: 18px;
+    text-align: center; cursor: pointer; background: var(--paper);
+  }
+  .photo-drop:focus-visible { outline: 2px solid var(--section-accent, var(--rust)); outline-offset: 2px; }
+  .photo-drop span { font-size: 0.86rem; color: var(--ink-soft); }
+  .photo-drop img { max-width: 100%; max-height: 160px; border-radius: 4px; display: block; margin: 0 auto; }
+
+  .photo-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+  .choose-btn, .extract-btn {
+    border-radius: 4px; padding: 8px 14px; font-size: 0.84rem; cursor: pointer; font-family: 'Work Sans', sans-serif;
+  }
+  .choose-btn { background: none; border: 1px solid var(--line); color: var(--ink-soft); }
+  .choose-btn:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .extract-btn { background: var(--section-accent, var(--rust)); color: var(--paper); border: none; font-weight: 600; }
+  .extract-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .extract-btn:not(:disabled):hover { opacity: 0.92; }
+
+  .extract-status { font-size: 0.8rem; color: var(--ink-soft); margin-top: 8px; min-height: 16px; }
+  .extract-status.error { color: var(--rust-dark); }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .save-btn {
+    background: var(--section-accent, var(--rust)); color: var(--paper); border: none;
+    border-radius: 4px; padding: 11px 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  }
+  .save-btn:hover { opacity: 0.92; }
+  .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .cancel-btn {
+    background: none; border: 1px solid var(--line); border-radius: 4px;
+    padding: 11px 18px; font-size: 0.9rem; color: var(--ink-soft); cursor: pointer;
+  }
+  .cancel-btn:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+  .status-msg { font-size: 0.85rem; margin-top: 10px; min-height: 18px; }
+  .status-msg.error { color: var(--rust-dark); }
+  .status-msg.saving { color: var(--ink-soft); }
+
+  .loading-note { color: var(--ink-soft); font-size: 0.9rem; padding: 12px 0; }
+
+  @media (prefers-reduced-motion: reduce) { .tab-card { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="hero">
+    <h1>Recipe Box</h1>
+    <p>Keep what you cook. Type it in, paste in a photo of a recipe card, and find it again by typing a word you remember.</p>
+  </header>
+
+  <div id="home-view">
+    <div class="tabs">
+      <button class="tab-card" style="--tab-accent: var(--rust)" data-section="breakfast">
+        <span class="tab-name">Breakfast</span>
+        <span class="tab-count" id="count-breakfast"></span>
+      </button>
+      <button class="tab-card" style="--tab-accent: var(--gold)" data-section="lunch-dinner">
+        <span class="tab-name">Lunch &amp; Dinner</span>
+        <span class="tab-count" id="count-lunch-dinner"></span>
+      </button>
+      <button class="tab-card" style="--tab-accent: var(--forest)" data-section="snacks">
+        <span class="tab-name">Snacks</span>
+        <span class="tab-count" id="count-snacks"></span>
+      </button>
+      <button class="tab-card" style="--tab-accent: var(--berry)" data-section="try">
+        <span class="tab-name">Recipes to Try</span>
+        <span class="tab-count" id="count-try"></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="section-breakfast" class="section-view" style="--section-accent: var(--rust)" data-section="breakfast" data-label="Breakfast"></div>
+  <div id="section-lunch-dinner" class="section-view" style="--section-accent: var(--gold)" data-section="lunch-dinner" data-label="Lunch &amp; Dinner"></div>
+  <div id="section-snacks" class="section-view" style="--section-accent: var(--forest)" data-section="snacks" data-label="Snacks"></div>
+  <div id="section-try" class="section-view" style="--section-accent: var(--berry)" data-label="Recipes to Try"></div>
+
+</div>
+
+<script>
+(function () {
+  const storage = {
+    async get(key) {
+      const raw = localStorage.getItem(key);
+      if (raw === null) throw new Error('Key not found');
+      return { key, value: raw };
+    },
+    async set(key, value) {
+      localStorage.setItem(key, value);
+      return { key, value };
+    },
+    async delete(key) {
+      localStorage.removeItem(key);
+      return { key, deleted: true };
+    }
+  };
+
+  const SECTIONS = [
+    { key: 'breakfast', label: 'Breakfast' },
+    { key: 'lunch-dinner', label: 'Lunch & Dinner' },
+    { key: 'snacks', label: 'Snacks' }
+  ];
+
+  const FIELD_DEFS = [
+    { key: 'title', label: 'Recipe name', multiline: false, placeholder: 'e.g. Blueberry pancakes',
+      prompt: 'Look closely at this image of a recipe. Extract only the recipe\'s title or name. Return just the title text and nothing else — no preamble, no quotes.' },
+    { key: 'ingredients', label: 'Ingredients', multiline: true, placeholder: 'Paste ingredients here...',
+      prompt: 'Look closely at this image of a recipe. Extract the full list of ingredients exactly as written, one per line. Return only the ingredient list and nothing else — no preamble.' },
+    { key: 'instructions', label: 'Instructions', multiline: true, placeholder: 'Paste instructions here...',
+      prompt: 'Look closely at this image of a recipe. Extract the cooking instructions or steps exactly as written. Return only the instructions and nothing else — no preamble.' },
+    { key: 'nutrition', label: 'Calories & nutrition information', multiline: true, placeholder: 'Paste calorie and nutrition info here...',
+      prompt: 'Look closely at this image of nutrition or calorie information. Extract all of it exactly as written (calories, protein, fat, carbs, sugar, sodium, etc). Return only that information and nothing else — no preamble.' }
+  ];
+
+  const cache = {};
+  function storageKey(section) { return 'recipes:' + section; }
+
+  async function loadSection(section) {
+    if (cache[section]) return cache[section];
+    try {
+      const result = await storage.get(storageKey(section));
+      const value = result && result.value ? JSON.parse(result.value) : [];
+      cache[section] = value;
+      return value;
+    } catch (err) {
+      cache[section] = [];
+      return [];
+    }
+  }
+
+  async function saveSection(section, recipes) {
+    cache[section] = recipes;
+    try {
+      const result = await storage.set(storageKey(section), JSON.stringify(recipes));
+      return !!result;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function uid() { return 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  async function refreshHomeCounts() {
+    for (const s of SECTIONS) {
+      const recipes = await loadSection(s.key);
+      const el = document.getElementById('count-' + s.key);
+      if (el) el.textContent = recipes.length === 0 ? 'empty' : recipes.length + (recipes.length === 1 ? ' recipe' : ' recipes');
+    }
+    const tryEntries = await loadTryEntries();
+    const tryCountEl = document.getElementById('count-try');
+    if (tryCountEl) tryCountEl.textContent = tryEntries.length === 0 ? 'empty' : tryEntries.length + (tryEntries.length === 1 ? ' saved' : ' saved');
+  }
+
+  // ---- Image extraction via Claude ----
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Could not read image'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function extractTextFromImage(base64, mediaType, promptText) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: promptText }
+          ]
+        }]
+      })
+    });
+    if (!response.ok) throw new Error('Request failed');
+    const data = await response.json();
+    return (data.content || []).map(b => b.type === 'text' ? b.text : '').join('\n').trim();
+  }
+
+  // ---- Recipes to Try: storage ----
+
+  const TRY_KEY = 'recipes:try';
+  let tryCache = null;
+
+  async function loadTryEntries() {
+    if (tryCache) return tryCache;
+    try {
+      const result = await storage.get(TRY_KEY);
+      tryCache = result && result.value ? JSON.parse(result.value) : [];
+    } catch (err) {
+      tryCache = [];
+    }
+    return tryCache;
+  }
+
+  async function saveTryEntries(entries) {
+    tryCache = entries;
+    try {
+      const result = await storage.set(TRY_KEY, JSON.stringify(entries));
+      return !!result;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function loadTryImage(id) {
+    try {
+      const result = await storage.get('try-image:' + id);
+      return result ? result.value : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function saveTryImage(id, dataUri) {
+    try {
+      await storage.set('try-image:' + id, dataUri);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteTryImage(id) {
+    try { await storage.delete('try-image:' + id); } catch (err) { /* ignore */ }
+  }
+
+  const TRY_EXTRACT_PROMPT = 'Look at this image, which is a screenshot or photo of a recipe from a website, blog, or social media post. Identify the recipe name/title and the website, blog, or account name it is from. Respond in exactly this format and nothing else:\nTitle: <recipe title>\nSource: <website, blog, or account name>';
+
+  function parseTryExtraction(text) {
+    const titleMatch = text.match(/Title:\s*(.+)/i);
+    const sourceMatch = text.match(/Source:\s*(.+)/i);
+    return {
+      title: titleMatch ? titleMatch[1].trim() : '',
+      source: sourceMatch ? sourceMatch[1].trim() : ''
+    };
+  }
+
+  // ---- Rendering ----
+
+  function renderSectionShell(label) {
+    return `
+      <button class="back-btn" data-action="home">&larr; All sections</button>
+      <h2 class="section-title">${label}</h2>
+      <div class="controls-row">
+        <div class="search-wrap">
+          <input type="text" placeholder="Search recipes by keyword..." data-role="search-input" autocomplete="off">
+          <div class="search-results" data-role="search-results"></div>
+        </div>
+        <button class="add-btn" data-action="show-add">+ Add New Recipe</button>
+      </div>
+      <div data-role="body"></div>
+    `;
+  }
+
+  function renderList(recipes) {
+    if (recipes.length === 0) {
+      return `<div class="empty-state">Nothing saved here yet. Tap "Add New Recipe" to start filling this section.</div>`;
+    }
+    return `<div class="recipe-list">${recipes.map(r => `
+      <div class="recipe-row" data-recipe-id="${r.id}">
+        <span class="r-title">${escapeHtml(r.title)}</span>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  function renderDetail(recipe) {
+    return `
+      <div class="recipe-detail">
+        <h3>${escapeHtml(recipe.title)}</h3>
+        <h4>Ingredients</h4>
+        <p class="block-text">${escapeHtml(recipe.ingredients) || '—'}</p>
+        <h4>Instructions</h4>
+        <p class="block-text">${escapeHtml(recipe.instructions) || '—'}</p>
+        <h4>Calories &amp; nutrition information</h4>
+        <p class="block-text">${escapeHtml(recipe.nutrition) || '—'}</p>
+        <div class="detail-actions">
+          <button class="link-btn" data-action="back-to-list">&larr; Back to list</button>
+          <div style="display:flex; gap:16px;">
+            <button class="link-btn" data-action="edit-recipe" data-recipe-id="${recipe.id}">Edit recipe</button>
+            <button class="link-btn danger" data-action="delete-recipe" data-recipe-id="${recipe.id}">Delete recipe</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFieldHtml(def) {
+    const inputEl = def.multiline
+      ? `<textarea data-field="${def.key}" placeholder="${def.placeholder}"></textarea>`
+      : `<input type="text" data-field="${def.key}" placeholder="${def.placeholder}">`;
+
+    return `
+      <div class="field" data-field-wrap="${def.key}">
+        <div class="field-head">
+          <label>${def.label}</label>
+          <button type="button" class="photo-toggle" data-action="toggle-photo" data-field="${def.key}">Paste photo instead</button>
+        </div>
+        ${inputEl}
+        <div class="photo-zone" data-role="photo-zone" data-field="${def.key}">
+          <div class="photo-drop" tabindex="0" data-role="photo-drop" data-field="${def.key}">
+            <span data-role="photo-hint">Paste a photo (Ctrl/Cmd+V) or choose a file</span>
+            <img data-role="photo-preview" style="display:none;">
+          </div>
+          <input type="file" accept="image/*" data-role="photo-input" data-field="${def.key}" style="display:none;">
+          <div class="photo-actions">
+            <button type="button" class="choose-btn" data-action="choose-photo" data-field="${def.key}">Choose photo</button>
+            <button type="button" class="extract-btn" data-action="extract-photo" data-field="${def.key}" disabled>Extract text</button>
+          </div>
+          <div class="extract-status" data-role="extract-status" data-field="${def.key}"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAddForm() {
+    return `
+      <div class="add-form">
+        ${FIELD_DEFS.map(renderFieldHtml).join('')}
+        <div class="form-actions">
+          <button class="save-btn" data-action="save-recipe">Save recipe</button>
+          <button class="cancel-btn" data-action="cancel-form">Cancel</button>
+        </div>
+        <div class="status-msg" data-role="status"></div>
+      </div>
+    `;
+  }
+
+  async function showSectionList(section) {
+    const el = document.getElementById('section-' + section);
+    const recipes = await loadSection(section);
+    const body = el.querySelector('[data-role="body"]');
+    body.innerHTML = renderList(recipes);
+    const search = el.querySelector('[data-role="search-input"]');
+    search.value = '';
+    closeSearchResults(el);
+  }
+
+  function closeSearchResults(el) {
+    const results = el.querySelector('[data-role="search-results"]');
+    results.classList.remove('open');
+    results.innerHTML = '';
+  }
+
+  async function handleSearch(section, query) {
+    const el = document.getElementById('section-' + section);
+    const results = el.querySelector('[data-role="search-results"]');
+    const q = query.trim().toLowerCase();
+    if (!q) { closeSearchResults(el); return; }
+
+    const recipes = await loadSection(section);
+    const matches = recipes.filter(r => {
+      const haystack = [r.title, r.ingredients, r.instructions, r.nutrition].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+
+    if (matches.length === 0) {
+      results.innerHTML = `<div class="no-match">No recipes match "${escapeHtml(query)}"</div>`;
+    } else {
+      results.innerHTML = matches.map(r => `<button type="button" data-recipe-id="${r.id}">${escapeHtml(r.title)}</button>`).join('');
+    }
+    results.classList.add('open');
+  }
+
+  async function openRecipeDetail(section, recipeId) {
+    const el = document.getElementById('section-' + section);
+    const recipes = await loadSection(section);
+    const recipe = recipes.find(r => r.id === recipeId);
+    if (!recipe) return;
+    const body = el.querySelector('[data-role="body"]');
+    body.innerHTML = renderDetail(recipe);
+    closeSearchResults(el);
+  }
+
+  async function openAddForm(section, recipe) {
+    const el = document.getElementById('section-' + section);
+    const body = el.querySelector('[data-role="body"]');
+    body.innerHTML = renderAddForm();
+    const formEl = body.querySelector('.add-form');
+
+    if (recipe) {
+      formEl.dataset.mode = 'edit';
+      formEl.dataset.recipeId = recipe.id;
+      FIELD_DEFS.forEach(def => {
+        const fieldEl = formEl.querySelector(`[data-field="${def.key}"]`);
+        if (fieldEl) fieldEl.value = recipe[def.key] || '';
+      });
+      formEl.querySelector('[data-action="save-recipe"]').textContent = 'Save changes';
+    } else {
+      formEl.dataset.mode = 'add';
+    }
+
+    bindAddFormEvents(formEl, section);
+  }
+
+  async function handleSaveRecipe(section, formEl) {
+    const status = formEl.querySelector('[data-role="status"]');
+    const titleField = formEl.querySelector('[data-field="title"]');
+    const title = titleField.value.trim();
+    if (!title) {
+      status.textContent = 'Please enter a recipe name before saving.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    const mode = formEl.dataset.mode || 'add';
+    const recipeId = formEl.dataset.recipeId;
+
+    const recipeData = { title };
+    FIELD_DEFS.forEach(def => {
+      if (def.key === 'title') return;
+      const el = formEl.querySelector(`[data-field="${def.key}"]`);
+      recipeData[def.key] = el.value.trim();
+    });
+
+    status.textContent = 'Saving...';
+    status.className = 'status-msg saving';
+
+    const recipes = await loadSection(section);
+    let updated;
+    if (mode === 'edit' && recipeId) {
+      updated = recipes.map(r => r.id === recipeId ? Object.assign({}, r, recipeData) : r);
+    } else {
+      updated = recipes.concat([Object.assign({ id: uid() }, recipeData)]);
+    }
+    const ok = await saveSection(section, updated);
+
+    if (!ok) {
+      status.textContent = 'Could not save. Please try again.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    await refreshHomeCounts();
+    if (mode === 'edit' && recipeId) {
+      await openRecipeDetail(section, recipeId);
+    } else {
+      await showSectionList(section);
+    }
+  }
+
+  async function handleDeleteRecipe(section, recipeId) {
+    const recipes = await loadSection(section);
+    const next = recipes.filter(r => r.id !== recipeId);
+    await saveSection(section, next);
+    await refreshHomeCounts();
+    await showSectionList(section);
+  }
+
+  // ---- Photo capture within a field ----
+
+  function togglePhotoZone(formEl, fieldKey) {
+    const zone = formEl.querySelector(`[data-role="photo-zone"][data-field="${fieldKey}"]`);
+    const toggleBtn = formEl.querySelector(`[data-action="toggle-photo"][data-field="${fieldKey}"]`);
+    const isOpen = zone.classList.toggle('open');
+    toggleBtn.classList.toggle('active', isOpen);
+    toggleBtn.textContent = isOpen ? 'Type instead' : 'Paste photo instead';
+  }
+
+  async function handleImageFile(formEl, fieldKey, file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const zone = formEl.querySelector(`[data-role="photo-zone"][data-field="${fieldKey}"]`);
+    const preview = zone.querySelector('[data-role="photo-preview"]');
+    const hint = zone.querySelector('[data-role="photo-hint"]');
+    const extractBtn = zone.querySelector('[data-action="extract-photo"]');
+    const status = zone.querySelector('[data-role="extract-status"]');
+
+    const base64 = await fileToBase64(file);
+    preview.src = 'data:' + file.type + ';base64,' + base64;
+    preview.style.display = 'block';
+    hint.style.display = 'none';
+    extractBtn.disabled = false;
+    status.textContent = '';
+    status.className = 'extract-status';
+    zone.dataset.pendingBase64 = base64;
+    zone.dataset.pendingMediaType = file.type;
+  }
+
+  async function handleExtract(formEl, fieldKey) {
+    const def = FIELD_DEFS.find(d => d.key === fieldKey);
+    const zone = formEl.querySelector(`[data-role="photo-zone"][data-field="${fieldKey}"]`);
+    const status = zone.querySelector('[data-role="extract-status"]');
+    const extractBtn = zone.querySelector(`[data-action="extract-photo"]`);
+    const targetField = formEl.querySelector(`[data-field="${fieldKey}"]`);
+
+    const base64 = zone.dataset.pendingBase64;
+    const mediaType = zone.dataset.pendingMediaType;
+    if (!base64) return;
+
+    extractBtn.disabled = true;
+    status.textContent = 'Reading photo...';
+    status.className = 'extract-status';
+
+    try {
+      const extracted = await extractTextFromImage(base64, mediaType, def.prompt);
+      const existing = targetField.value.trim();
+      targetField.value = existing ? existing + '\n' + extracted : extracted;
+      status.textContent = 'Added to ' + def.label.toLowerCase() + '.';
+      togglePhotoZone(formEl, fieldKey);
+    } catch (err) {
+      status.textContent = 'Could not read that photo. Please try again or type it in.';
+      status.className = 'extract-status error';
+      extractBtn.disabled = false;
+    }
+  }
+
+  function bindAddFormEvents(formEl, section) {
+    formEl.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('[data-action="toggle-photo"]');
+      if (toggleBtn) { togglePhotoZone(formEl, toggleBtn.dataset.field); return; }
+
+      const chooseBtn = e.target.closest('[data-action="choose-photo"]');
+      if (chooseBtn) {
+        const input = formEl.querySelector(`[data-role="photo-input"][data-field="${chooseBtn.dataset.field}"]`);
+        input.click();
+        return;
+      }
+
+      const dropZone = e.target.closest('[data-role="photo-drop"]');
+      if (dropZone && !e.target.closest('img')) {
+        const input = formEl.querySelector(`[data-role="photo-input"][data-field="${dropZone.dataset.field}"]`);
+        input.click();
+        return;
+      }
+
+      const extractBtn = e.target.closest('[data-action="extract-photo"]');
+      if (extractBtn && !extractBtn.disabled) { handleExtract(formEl, extractBtn.dataset.field); return; }
+    });
+
+    formEl.addEventListener('change', (e) => {
+      if (e.target.matches('[data-role="photo-input"]')) {
+        const file = e.target.files[0];
+        handleImageFile(formEl, e.target.dataset.field, file);
+      }
+    });
+
+    formEl.addEventListener('paste', (e) => {
+      const dropZone = e.target.closest('[data-role="photo-drop"]');
+      if (!dropZone) return;
+      const items = (e.clipboardData || window.clipboardData).items;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          handleImageFile(formEl, dropZone.dataset.field, file);
+          e.preventDefault();
+          break;
+        }
+      }
+    });
+  }
+
+  // ---- Recipes to Try: rendering & behavior ----
+
+  function renderTrySectionShell() {
+    return `
+      <button class="back-btn" data-action="home">&larr; All sections</button>
+      <h2 class="section-title">Recipes to Try</h2>
+      <div class="controls-row">
+        <div class="search-wrap">
+          <input type="text" placeholder="Search by keyword or website/blog..." data-role="try-search-input" autocomplete="off">
+          <div class="search-results" data-role="try-search-results"></div>
+        </div>
+        <button class="add-btn" data-action="try-show-add">+ Add New</button>
+      </div>
+      <div data-role="try-body"></div>
+    `;
+  }
+
+  function renderTryList(entries) {
+    if (entries.length === 0) {
+      return `<div class="empty-state">Nothing saved here yet. Add a photo or link of a recipe you want to try.</div>`;
+    }
+    return `<div class="recipe-list">${entries.map(e => `
+      <div class="recipe-row" data-try-id="${e.id}">
+        <span class="r-title">${escapeHtml(e.title || 'Untitled')}</span>
+        <span class="r-cal">${escapeHtml(e.source || '')}</span>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  async function renderTryDetail(entry) {
+    const image = entry.hasImage ? await loadTryImage(entry.id) : null;
+    return `
+      <div class="recipe-detail">
+        <h3>${escapeHtml(entry.title || 'Untitled')}</h3>
+        ${entry.source ? `<div style="color:var(--section-accent, var(--rust));font-weight:600;font-size:0.9rem;margin-bottom:14px;">${escapeHtml(entry.source)}</div>` : ''}
+        ${entry.url ? `<h4>Link</h4><p class="block-text"><a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener" style="color:var(--section-accent, var(--rust));">${escapeHtml(entry.url)}</a></p>` : ''}
+        ${image ? `<h4>Saved photo</h4><img src="${image}" style="max-width:100%; border-radius:4px; border:1px solid var(--line);">` : ''}
+        <div class="detail-actions">
+          <button class="link-btn" data-action="try-back-to-list">&larr; Back to list</button>
+          <div style="display:flex; gap:16px;">
+            <button class="link-btn" data-action="try-edit" data-try-id="${entry.id}">Edit</button>
+            <button class="link-btn danger" data-action="try-delete" data-try-id="${entry.id}">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTryAddForm() {
+    return `
+      <div class="add-form" id="try-add-form">
+        <div class="field">
+          <div class="field-head"><label>Recipe name</label></div>
+          <input type="text" data-try-field="title" placeholder="e.g. Miso Butter Salmon">
+        </div>
+        <div class="field">
+          <div class="field-head"><label>Website / blog / account name</label></div>
+          <input type="text" data-try-field="source" placeholder="e.g. Half Baked Harvest, Bon App&eacute;tit, @account">
+        </div>
+        <div class="field">
+          <div class="field-head"><label>Recipe link (optional)</label></div>
+          <input type="text" data-try-field="url" placeholder="Paste a URL...">
+        </div>
+        <div class="field">
+          <div class="field-head"><label>Photo of the recipe (optional)</label></div>
+          <div class="photo-zone open">
+            <div class="photo-drop" tabindex="0" data-role="try-photo-drop">
+              <span data-role="try-photo-hint">Paste a screenshot (Ctrl/Cmd+V) or choose a file</span>
+              <img data-role="try-photo-preview" style="display:none;">
+            </div>
+            <input type="file" accept="image/*" data-role="try-photo-input" style="display:none;">
+            <div class="photo-actions">
+              <button type="button" class="choose-btn" data-action="try-choose-photo">Choose photo</button>
+              <button type="button" class="extract-btn" data-action="try-extract-photo" disabled>Fill in name &amp; source</button>
+            </div>
+            <div class="extract-status" data-role="try-extract-status"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="save-btn" data-action="try-save">Save</button>
+          <button class="cancel-btn" data-action="try-cancel-form">Cancel</button>
+        </div>
+        <div class="status-msg" data-role="try-status"></div>
+      </div>
+    `;
+  }
+
+  async function openTrySection() {
+    document.getElementById('home-view').style.display = 'none';
+    document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById('section-try');
+    el.classList.add('active');
+    if (!el.dataset.built) {
+      el.innerHTML = renderTrySectionShell();
+      el.dataset.built = '1';
+      bindTrySectionEvents(el);
+    }
+    await showTryList();
+  }
+
+  async function showTryList() {
+    const el = document.getElementById('section-try');
+    const entries = await loadTryEntries();
+    const body = el.querySelector('[data-role="try-body"]');
+    body.innerHTML = renderTryList(entries);
+    const search = el.querySelector('[data-role="try-search-input"]');
+    search.value = '';
+    closeTrySearchResults(el);
+  }
+
+  function closeTrySearchResults(el) {
+    const results = el.querySelector('[data-role="try-search-results"]');
+    results.classList.remove('open');
+    results.innerHTML = '';
+  }
+
+  async function handleTrySearch(query) {
+    const el = document.getElementById('section-try');
+    const results = el.querySelector('[data-role="try-search-results"]');
+    const q = query.trim().toLowerCase();
+    if (!q) { closeTrySearchResults(el); return; }
+    const entries = await loadTryEntries();
+    const matches = entries.filter(e => {
+      const haystack = [e.title, e.source, e.url].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+    if (matches.length === 0) {
+      results.innerHTML = `<div class="no-match">No matches for "${escapeHtml(query)}"</div>`;
+    } else {
+      results.innerHTML = matches.map(e =>
+        `<button type="button" data-try-id="${e.id}">${escapeHtml(e.title || 'Untitled')}${e.source ? ' — ' + escapeHtml(e.source) : ''}</button>`
+      ).join('');
+    }
+    results.classList.add('open');
+  }
+
+  async function openTryDetail(id) {
+    const el = document.getElementById('section-try');
+    const entries = await loadTryEntries();
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    const body = el.querySelector('[data-role="try-body"]');
+    body.innerHTML = '<div class="loading-note">Loading...</div>';
+    body.innerHTML = await renderTryDetail(entry);
+    closeTrySearchResults(el);
+  }
+
+  async function openTryAddForm(entry) {
+    const el = document.getElementById('section-try');
+    const body = el.querySelector('[data-role="try-body"]');
+    body.innerHTML = renderTryAddForm();
+    const formEl = body.querySelector('#try-add-form');
+
+    if (entry) {
+      formEl.dataset.mode = 'edit';
+      formEl.dataset.tryId = entry.id;
+      formEl.querySelector('[data-try-field="title"]').value = entry.title || '';
+      formEl.querySelector('[data-try-field="source"]').value = entry.source || '';
+      formEl.querySelector('[data-try-field="url"]').value = entry.url || '';
+      formEl.querySelector('[data-action="try-save"]').textContent = 'Save changes';
+      if (entry.hasImage) {
+        const img = await loadTryImage(entry.id);
+        if (img) {
+          const preview = formEl.querySelector('[data-role="try-photo-preview"]');
+          const hint = formEl.querySelector('[data-role="try-photo-hint"]');
+          preview.src = img;
+          preview.style.display = 'block';
+          hint.style.display = 'none';
+          formEl.dataset.pendingImage = img;
+        }
+      }
+    } else {
+      formEl.dataset.mode = 'add';
+    }
+
+    bindTryAddFormEvents(formEl);
+  }
+
+  function bindTryAddFormEvents(formEl) {
+    formEl.addEventListener('click', (e) => {
+      const chooseBtn = e.target.closest('[data-action="try-choose-photo"]');
+      if (chooseBtn) { formEl.querySelector('[data-role="try-photo-input"]').click(); return; }
+
+      const dropZone = e.target.closest('[data-role="try-photo-drop"]');
+      if (dropZone && !e.target.closest('img')) { formEl.querySelector('[data-role="try-photo-input"]').click(); return; }
+
+      const extractBtn = e.target.closest('[data-action="try-extract-photo"]');
+      if (extractBtn && !extractBtn.disabled) { handleTryExtract(formEl); return; }
+
+      const saveBtn = e.target.closest('[data-action="try-save"]');
+      if (saveBtn) { handleSaveTryEntry(formEl); return; }
+
+      const cancelBtn = e.target.closest('[data-action="try-cancel-form"]');
+      if (cancelBtn) {
+        if (formEl.dataset.mode === 'edit' && formEl.dataset.tryId) {
+          openTryDetail(formEl.dataset.tryId);
+        } else {
+          showTryList();
+        }
+        return;
+      }
+    });
+
+    formEl.addEventListener('change', (e) => {
+      if (e.target.matches('[data-role="try-photo-input"]')) {
+        handleTryImageFile(formEl, e.target.files[0]);
+      }
+    });
+
+    formEl.addEventListener('paste', (e) => {
+      const dropZone = e.target.closest('[data-role="try-photo-drop"]');
+      if (!dropZone) return;
+      const items = (e.clipboardData || window.clipboardData).items;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          handleTryImageFile(formEl, item.getAsFile());
+          e.preventDefault();
+          break;
+        }
+      }
+    });
+  }
+
+  async function handleTryImageFile(formEl, file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const preview = formEl.querySelector('[data-role="try-photo-preview"]');
+    const hint = formEl.querySelector('[data-role="try-photo-hint"]');
+    const extractBtn = formEl.querySelector('[data-action="try-extract-photo"]');
+    const status = formEl.querySelector('[data-role="try-extract-status"]');
+
+    const base64 = await fileToBase64(file);
+    const dataUri = 'data:' + file.type + ';base64,' + base64;
+    preview.src = dataUri;
+    preview.style.display = 'block';
+    hint.style.display = 'none';
+    extractBtn.disabled = false;
+    status.textContent = '';
+    status.className = 'extract-status';
+    formEl.dataset.pendingImage = dataUri;
+    formEl.dataset.pendingBase64 = base64;
+    formEl.dataset.pendingMediaType = file.type;
+  }
+
+  async function handleTryExtract(formEl) {
+    const status = formEl.querySelector('[data-role="try-extract-status"]');
+    const extractBtn = formEl.querySelector('[data-action="try-extract-photo"]');
+    const base64 = formEl.dataset.pendingBase64;
+    const mediaType = formEl.dataset.pendingMediaType;
+    if (!base64) return;
+
+    extractBtn.disabled = true;
+    status.textContent = 'Reading photo...';
+    status.className = 'extract-status';
+
+    try {
+      const raw = await extractTextFromImage(base64, mediaType, TRY_EXTRACT_PROMPT);
+      const parsed = parseTryExtraction(raw);
+      if (parsed.title) formEl.querySelector('[data-try-field="title"]').value = parsed.title;
+      if (parsed.source) formEl.querySelector('[data-try-field="source"]').value = parsed.source;
+      status.textContent = 'Filled in from photo.';
+      extractBtn.disabled = false;
+    } catch (err) {
+      status.textContent = 'Could not read that photo. Please try again or type it in.';
+      status.className = 'extract-status error';
+      extractBtn.disabled = false;
+    }
+  }
+
+  async function handleSaveTryEntry(formEl) {
+    const status = formEl.querySelector('[data-role="try-status"]');
+    const title = formEl.querySelector('[data-try-field="title"]').value.trim();
+    const source = formEl.querySelector('[data-try-field="source"]').value.trim();
+    const url = formEl.querySelector('[data-try-field="url"]').value.trim();
+
+    if (!title && !url && !formEl.dataset.pendingImage) {
+      status.textContent = 'Add at least a name, a link, or a photo before saving.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    status.textContent = 'Saving...';
+    status.className = 'status-msg saving';
+
+    const mode = formEl.dataset.mode || 'add';
+    const tryId = formEl.dataset.tryId || uid();
+    const hasImage = !!formEl.dataset.pendingImage;
+
+    if (hasImage) await saveTryImage(tryId, formEl.dataset.pendingImage);
+
+    const entries = await loadTryEntries();
+    const entryData = { id: tryId, title, source, url, hasImage };
+
+    let updated;
+    if (mode === 'edit') {
+      updated = entries.map(e => e.id === tryId ? entryData : e);
+    } else {
+      updated = entries.concat([entryData]);
+    }
+
+    const ok = await saveTryEntries(updated);
+    if (!ok) {
+      status.textContent = 'Could not save. Please try again.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    await refreshHomeCounts();
+    if (mode === 'edit') {
+      await openTryDetail(tryId);
+    } else {
+      await showTryList();
+    }
+  }
+
+  async function handleDeleteTryEntry(id) {
+    const entries = await loadTryEntries();
+    const entry = entries.find(e => e.id === id);
+    const updated = entries.filter(e => e.id !== id);
+    await saveTryEntries(updated);
+    if (entry && entry.hasImage) await deleteTryImage(id);
+    await refreshHomeCounts();
+    await showTryList();
+  }
+
+  function bindTrySectionEvents(el) {
+    el.addEventListener('click', async (e) => {
+      const backHome = e.target.closest('[data-action="home"]');
+      if (backHome) { goHome(); return; }
+
+      const showAdd = e.target.closest('[data-action="try-show-add"]');
+      if (showAdd) { openTryAddForm(); return; }
+
+      const backToList = e.target.closest('[data-action="try-back-to-list"]');
+      if (backToList) { showTryList(); return; }
+
+      const editBtn = e.target.closest('[data-action="try-edit"]');
+      if (editBtn) {
+        const entries = await loadTryEntries();
+        const entry = entries.find(x => x.id === editBtn.dataset.tryId);
+        if (entry) openTryAddForm(entry);
+        return;
+      }
+
+      const deleteBtn = e.target.closest('[data-action="try-delete"]');
+      if (deleteBtn) { handleDeleteTryEntry(deleteBtn.dataset.tryId); return; }
+
+      const row = e.target.closest('.recipe-row[data-try-id]');
+      if (row) { openTryDetail(row.dataset.tryId); return; }
+
+      const resultBtn = e.target.closest('[data-role="try-search-results"] button');
+      if (resultBtn) { openTryDetail(resultBtn.dataset.tryId); return; }
+    });
+
+    el.addEventListener('input', (e) => {
+      if (e.target.matches('[data-role="try-search-input"]')) handleTrySearch(e.target.value);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!el.classList.contains('active')) return;
+      if (!e.target.closest('.search-wrap')) closeTrySearchResults(el);
+    });
+  }
+
+  // ---- Navigation ----
+
+  function goHome() {
+    document.getElementById('home-view').style.display = 'block';
+    document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+  }
+
+  async function openSection(section) {
+    document.getElementById('home-view').style.display = 'none';
+    document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById('section-' + section);
+    el.classList.add('active');
+    if (!el.dataset.built) {
+      el.innerHTML = renderSectionShell(el.dataset.label);
+      el.dataset.built = '1';
+      bindSectionEvents(el, section);
+    }
+    await showSectionList(section);
+  }
+
+  function bindSectionEvents(el, section) {
+    el.addEventListener('click', async (e) => {
+      const backHome = e.target.closest('[data-action="home"]');
+      if (backHome) { goHome(); return; }
+
+      const showAdd = e.target.closest('[data-action="show-add"]');
+      if (showAdd) { openAddForm(section); return; }
+
+      const editBtn = e.target.closest('[data-action="edit-recipe"]');
+      if (editBtn) {
+        const recipes = await loadSection(section);
+        const recipe = recipes.find(r => r.id === editBtn.dataset.recipeId);
+        if (recipe) openAddForm(section, recipe);
+        return;
+      }
+
+      const backToList = e.target.closest('[data-action="back-to-list"]');
+      if (backToList) { showSectionList(section); return; }
+
+      const cancelForm = e.target.closest('[data-action="cancel-form"]');
+      if (cancelForm) {
+        const formEl = cancelForm.closest('.add-form');
+        if (formEl.dataset.mode === 'edit' && formEl.dataset.recipeId) {
+          openRecipeDetail(section, formEl.dataset.recipeId);
+        } else {
+          showSectionList(section);
+        }
+        return;
+      }
+
+      const saveBtn = e.target.closest('[data-action="save-recipe"]');
+      if (saveBtn) { handleSaveRecipe(section, saveBtn.closest('.add-form')); return; }
+
+      const deleteBtn = e.target.closest('[data-action="delete-recipe"]');
+      if (deleteBtn) { handleDeleteRecipe(section, deleteBtn.dataset.recipeId); return; }
+
+      const row = e.target.closest('.recipe-row');
+      if (row) { openRecipeDetail(section, row.dataset.recipeId); return; }
+
+      const resultBtn = e.target.closest('[data-role="search-results"] button');
+      if (resultBtn) { openRecipeDetail(section, resultBtn.dataset.recipeId); return; }
+    });
+
+    el.addEventListener('input', (e) => {
+      if (e.target.matches('[data-role="search-input"]')) handleSearch(section, e.target.value);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!el.classList.contains('active')) return;
+      if (!e.target.closest('.search-wrap')) closeSearchResults(el);
+    });
+  }
+
+  document.querySelectorAll('.tab-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.section === 'try') {
+        openTrySection();
+      } else {
+        openSection(btn.dataset.section);
+      }
+    });
+  });
+
+  refreshHomeCounts();
+})();
+</script>
+</body>
+</html>
